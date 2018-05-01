@@ -1,6 +1,6 @@
 # Get Islandora Content
 
-Command-line tool to harvest Islandora objects through OAI-PMH.
+Command-line tool to harvest Islandora objects through OAI-PMH. More of a proof of concept than anything else, but works as advertised. For background, see https://github.com/Islandora-CLAW/CLAW/issues/452.
 
 ## Requirements
 
@@ -59,7 +59,46 @@ The output will contain a `metadata.xml` file and and file corresponding to each
 └── metadata.xml
 ```
 
-The `metadata.xml` file contains all of the MODS datastreams retrieved from the OAI harvest, concatenated together and wrapped in a `<modsCollection>` element.
+The `metadata.xml` file contains all of the MODS datastreams retrieved from the OAI harvest, concatenated together and wrapped in a `<modsCollection>` element.e.g.:
+
+```xml
+<modsCollection>
+<record xmlns="http://www.openarchives.org/OAI/2.0/"><header><identifier>oai:digital.lib.sfu.ca:hbc_2</identifier><datestamp>2017-08-01T11:02:59Z</datestamp><setSpec>hbc_collection</setSpec></header><metadata><mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <titleInfo>
+    <title>A view of a rope bridge, (2) showing traffic</title>
+  </titleInfo>
+  <name>
+    <namePart>Harrison Brown</namePart>
+    <role>
+      <roleTerm type="code" authority="marcrelator">pht</roleTerm>
+      <roleTerm type="text" authority="marcrelator">Photographer</roleTerm>
+    </role>
+  </name>
+  <originInfo>
+    <dateIssued encoding="w3cdtf" keyDate="yes">1936-11-12</dateIssued>
+  </originInfo>
+  <abstract>Kwan Hsian</abstract>
+  <genre authority="lcsh">photographs</genre>
+  <accessCondition type="use and reproduction">Reproduction of the material is subject to the approval of the Special Collections and Rare Books Librarian</accessCondition>
+  <identifier type="local"/>
+  <typeOfResource>still image</typeOfResource>
+  <identifier type="uuid">f7bc0c20-9bc6-4499-b1f3-7fda4eafeaf0</identifier>
+  <identifier type="uri" invalid="yes" displayLabel="Migrated From">http://content.lib.sfu.ca/cdm/ref/collection/hbc/id/1</identifier>
+</mods></metadata></record>
+
+<!-- more records here -->
+
+</modsCollection>
+```
+
+
+## To do
+
+* Confirm that the filenames are suitable for use by Migrate Plus
+* More, better error handling
+* Ability to harvest multiple collections at one time`
+* Ability to limit harvest to objects whose OBJs are of specific MIME types
+* Ability to specify datastreams other than OBJ, per content model
 
 ## Maintainer
 

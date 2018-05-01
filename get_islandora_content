@@ -1,13 +1,18 @@
 #!/usr/bin/env php
 <?php
 
+/**
+ * You only need to change these three variables.
+ */
 $output_directory = '/tmp/test';
 $host = 'http://digital.lib.sfu.ca';
-$oai_url = $host . '/oai2';
-
 $set = 'hiv_collection';
-$metadata_prefix = 'oai_dc';
 
+/**
+ * You do not need to change anything below this line.
+ */
+$oai_url = $host . '/oai2';
+$metadata_prefix = 'mods';
 $metadata_filename = 'metadata.xml';
 $metadata_path = $output_directory . DIRECTORY_SEPARATOR . $metadata_filename;
 
@@ -17,15 +22,19 @@ use GuzzleHttp\Client;
 $client = new \Phpoaipmh\Client($oai_url);
 $endpoint = new \Phpoaipmh\Endpoint($client);
 
+if (!file_exists($output_directory)) {
+    mkdir($output_directory);
+}
+
 $recs = $endpoint->listRecords($metadata_prefix, null, null, $set);
-file_put_contents($metadata_path, '<mods_collection>' . "\n", FILE_APPEND);
+file_put_contents($metadata_path, '<modsCollection>' . "\n", FILE_APPEND);
 foreach($recs as $rec) {
    $pid = get_pid($rec->asXML());
+   print "Retrieving content for object " . $pid . "\n";
    file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
    get_obj($host, $pid, $output_directory);
-   print "Retrieving content for object " . $pid . "\n";
 }
-file_put_contents($metadata_path, "\n" . '</mods_collection>', FILE_APPEND);
+file_put_contents($metadata_path, "\n" . '</modsCollection>', FILE_APPEND);
 
 function get_pid($xml) {
     $dom = new \DOMDocument;
@@ -41,14 +50,7 @@ function get_pid($xml) {
 function get_obj($host, $pid, $output_directory) {
     $obj_url = $host . '/islandora/object/' . $pid . '/datastream/OBJ/download';
     $client = new Client();
-    $response = $client->get(
-        $obj_url,
-            ['stream' => true,
-            // 'timeout' => $this->httpTimeout,
-            // 'connect_timeout' => $this->httpTimeout,
-            // 'verify' => $this->verifyCA]
-            ]
-        );
+    $response = $client->get($obj_url, ['stream' => true, 'verify' => true]);
 
     // Lazy MimeType => extension mapping: use the last part of the MimeType.
     $content_types = $response->getHeader('Content-Type');
@@ -63,4 +65,3 @@ function get_obj($host, $pid, $output_directory) {
         file_put_contents($content_file_path, $body->read(2048), FILE_APPEND);
     }
 }
-

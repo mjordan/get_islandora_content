@@ -1,0 +1,11 @@
+{
+    "name": "Get Islandora Content",
+    "license": "Unlicense",
+    "type": "project",
+    "require": {
+        "php": ">=5.5.0",
+        "monolog/monolog": "~1.13",
+        "caseyamcl/phpoaipmh": "~2.0",
+        "guzzlehttp/guzzle": "~6.0"
+    }
+}

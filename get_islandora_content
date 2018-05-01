@@ -1,0 +1,66 @@
+#!/usr/bin/env php
+<?php
+
+$output_directory = '/tmp/test';
+$host = 'http://digital.lib.sfu.ca';
+$oai_url = $host . '/oai2';
+
+$set = 'hiv_collection';
+$metadata_prefix = 'oai_dc';
+
+$metadata_filename = 'metadata.xml';
+$metadata_path = $output_directory . DIRECTORY_SEPARATOR . $metadata_filename;
+
+require 'vendor/autoload.php';
+use GuzzleHttp\Client;
+
+$client = new \Phpoaipmh\Client($oai_url);
+$endpoint = new \Phpoaipmh\Endpoint($client);
+
+$recs = $endpoint->listRecords($metadata_prefix, null, null, $set);
+file_put_contents($metadata_path, '<mods_collection>' . "\n", FILE_APPEND);
+foreach($recs as $rec) {
+   $pid = get_pid($rec->asXML());
+   file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
+   get_obj($host, $pid, $output_directory);
+   print "Retrieving content for object " . $pid . "\n";
+}
+file_put_contents($metadata_path, "\n" . '</mods_collection>', FILE_APPEND);
+
+function get_pid($xml) {
+    $dom = new \DOMDocument;
+    $dom->loadXML($xml);
+    // There will only be one oai:identifer element. Islandora's OAI identifiers look like
+    // oai:digital.lib.sfu.ca:foo_112, 'foo_123' being the object's PID.
+    $identifier = $dom->getElementsByTagNameNS('http://www.openarchives.org/OAI/2.0/', 'identifier')->item(0);
+    $raw_pid = preg_replace('#.*:#', '', trim($identifier->nodeValue));
+    $pid = preg_replace('/_/', ':', $raw_pid);
+    return $pid;
+}
+
+function get_obj($host, $pid, $output_directory) {
+    $obj_url = $host . '/islandora/object/' . $pid . '/datastream/OBJ/download';
+    $client = new Client();
+    $response = $client->get(
+        $obj_url,
+            ['stream' => true,
+            // 'timeout' => $this->httpTimeout,
+            // 'connect_timeout' => $this->httpTimeout,
+            // 'verify' => $this->verifyCA]
+            ]
+        );
+
+    // Lazy MimeType => extension mapping: use the last part of the MimeType.
+    $content_types = $response->getHeader('Content-Type');
+    list($type, $extension) = explode('/', $content_types[0]);
+    $extension = preg_replace('/;.*$/', '', $extension);
+
+    $filename = preg_replace('/:/', '_', $pid);
+    $content_file_path = $output_directory . DIRECTORY_SEPARATOR . $filename . '.' . $extension;
+
+    $body = $response->getBody();
+    while (!$body->eof()) {
+        file_put_contents($content_file_path, $body->read(2048), FILE_APPEND);
+    }
+}
+

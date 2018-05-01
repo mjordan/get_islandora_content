@@ -6,7 +6,7 @@
  */
 $output_directory = '/tmp/test';
 $host = 'http://digital.lib.sfu.ca';
-$set = 'hiv_collection';
+$set = 'hbc_collection';
 
 /**
  * You do not need to change anything below this line.
@@ -27,14 +27,17 @@ if (!file_exists($output_directory)) {
 }
 
 $recs = $endpoint->listRecords($metadata_prefix, null, null, $set);
+$rec_num = 0;
 file_put_contents($metadata_path, '<modsCollection>' . "\n", FILE_APPEND);
 foreach($recs as $rec) {
+   $rec_num++;
    $pid = get_pid($rec->asXML());
    print "Retrieving content for object " . $pid . "\n";
    file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
    get_obj($host, $pid, $output_directory);
 }
 file_put_contents($metadata_path, "\n" . '</modsCollection>', FILE_APPEND);
+print "$rec_num objects retrieved and saved in $output_directory.\n";
 
 function get_pid($xml) {
     $dom = new \DOMDocument;

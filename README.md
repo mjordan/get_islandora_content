@@ -18,7 +18,7 @@ Command-line tool to harvest Islandora objects through OAI-PMH. More of a proof 
 
 ## Overview and usage
 
-Run `./get_islandora_content` to get help usage information:
+Run `./get_islandora_content --help` to get help usage information:
 
 ```
 -c/--collection <argument>
@@ -68,7 +68,7 @@ The output will contain a `metadata.xml` file and and file corresponding to each
 └── metadata.xml
 ```
 
-The `metadata.xml` file contains all of the MODS datastreams retrieved from the OAI harvest, concatenated together and wrapped in a `<modsCollection>` element.e.g.:
+The `metadata.xml` file contains all of the MODS datastreams retrieved from the OAI harvest, concatenated together and wrapped in a `<modsCollection>` element, e.g.:
 
 ```xml
 <modsCollection>
@@ -95,7 +95,7 @@ The `metadata.xml` file contains all of the MODS datastreams retrieved from the 
   <identifier type="uri" invalid="yes" displayLabel="Migrated From">http://content.lib.sfu.ca/cdm/ref/collection/hbc/id/1</identifier>
 </mods></metadata></record>
 
-<!-- more records here -->
+<!-- more MODS records here -->
 
 </modsCollection>
 ```
@@ -106,6 +106,11 @@ The `metadata.xml` file contains all of the MODS datastreams retrieved from the 
 * More, better error handling
 * Ability to limit harvest to objects whose OBJs are of specific MIME types
 * Ability to specify datastreams other than OBJ, per content model
+
+## Contributing
+
+* Testing, bug reporting, and questions are welcome. Please open an issue.
+* Pull requests are welcome, but if you want to open a pull request, please open an issue first.
 
 ## Maintainer
 

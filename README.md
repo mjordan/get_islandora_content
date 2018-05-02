@@ -1,6 +1,6 @@
 # Get Islandora Content
 
-Command-line tool to harvest Islandora objects through OAI-PMH. More of a proof of concept than anything else, but works as advertised. For background, see https://github.com/Islandora-CLAW/CLAW/issues/452.
+Command-line tool to harvest Islandora objects through OAI-PMH and save them to disk ready to ingest into Drupal 8 using Migrate Plus. More of a proof of concept than anything else, but works as advertised. For background, see https://github.com/Islandora-CLAW/CLAW/issues/452.
 
 ## Requirements
 
@@ -37,7 +37,7 @@ Run `./get_islandora_content --help` to get help usage information:
      The full path to the output directory.
 ```
 
-An example of running the script is:
+Examples of running the script include:
 
 `./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing`
 `./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing -d PDF`

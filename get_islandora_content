@@ -14,10 +14,18 @@ $cmd->option('c')
 $cmd->option('o')
     ->aka('output_directory')
     ->describedAs('The full path to the output directory.');
+$cmd->option('m')
+    ->aka('mimetype')
+    ->describedAs('A MIME type to restrict harvested objects to.');
+$cmd->option('d')
+    ->aka('dsid')
+    ->describedAs('Datastream ID to harvest. Default is "OBJ".')
+    ->default('OBJ');
 
 $output_directory = $cmd['output_directory'];
 $host = rtrim($cmd['host'], '/');
 $set = preg_replace('/:/', '_', $cmd['collection']);
+$dsid = $cmd['dsid'];
 
 $oai_url = $host . '/oai2';
 $metadata_prefix = 'mods';
@@ -35,11 +43,25 @@ $recs = $endpoint->listRecords($metadata_prefix, null, null, $set);
 $rec_num = 0;
 file_put_contents($metadata_path, '<modsCollection>' . "\n", FILE_APPEND);
 foreach($recs as $rec) {
-   $rec_num++;
-   $pid = get_pid($rec->asXML());
-   print "Retrieving content for object " . $pid . "\n";
-   file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
-   get_obj($host, $pid, $output_directory);
+    $pid = get_pid($rec->asXML());
+    list($mimetype, $response_code) = ping_datastream($host, $pid, $dsid);
+    if ($cmd['mimetype'] && $response_code == 200) {
+        if ($remote_obj_mimetype == $cmd['mimetype']) {
+            $rec_num++;
+            print "Retrieving content for object " . $pid . "\n";
+            file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
+            get_obj($host, $pid, $output_directory);
+        }
+    } else {
+        if ($response_code == 200) {
+            $rec_num++;
+            print "Retrieving content for object " . $pid . "\n";
+            file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
+            get_obj($host, $pid, $dsid, $output_directory);
+        } else {
+            print "$dsid datastream not found for object $pid\n";
+        }
+    }
 }
 file_put_contents($metadata_path, "\n" . '</modsCollection>', FILE_APPEND);
 print "$rec_num objects retrieved and saved in $output_directory.\n";
@@ -55,10 +77,10 @@ function get_pid($xml) {
     return $pid;
 }
 
-function get_obj($host, $pid, $output_directory) {
-    $obj_url = $host . '/islandora/object/' . $pid . '/datastream/OBJ/download';
+function get_obj($host, $pid, $dsid, $output_directory) {
+    $obj_url = $host . '/islandora/object/' . $pid . '/datastream/' . $dsid . '/download';
     $client = new Client();
-    $response = $client->get($obj_url, ['stream' => true, 'verify' => true]);
+    $response = $client->get($obj_url, ['http_errors' => false, 'stream' => true, 'verify' => true]);
 
     // Lazy MimeType => extension mapping: use the last part of the MimeType.
     $content_types = $response->getHeader('Content-Type');
@@ -72,4 +94,13 @@ function get_obj($host, $pid, $output_directory) {
     while (!$body->eof()) {
         file_put_contents($content_file_path, $body->read(2048), FILE_APPEND);
     }
+}
+
+function ping_datastream($host, $pid, $dsid) {
+    $client = new Client();
+    $url = $host . '/islandora/object/' . $pid . '/datastream/' . $dsid . '/download';
+    $response = $client->head($url, ['http_errors' => false]);
+    $mimetype = $response->getHeader('Content-Type');
+    $status_code = $response->getStatusCode();
+    return array($mimetype[0], $status_code);
 }

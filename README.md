@@ -21,17 +21,17 @@ Command-line tool to harvest Islandora objects through OAI-PMH. More of a proof 
 Run `./get_islandora_content --help` to get help usage information:
 
 ```
+-d/--dsid <argument>
+     Datastream ID to harvest. Default is "OBJ".
+
 -c/--collection <argument>
      A collection PID to harvest.
-
 
 -h/--host <argument>
      The Islandora server's hostname, including the "http(s)://". The trailing "/" is optional.
 
-
---help
-     Show the help page for this command.
-
+-m/--mimetype <argument>
+     A MIME type to restrict harvested objects to.
 
 -o/--output_directory <argument>
      The full path to the output directory.
@@ -40,6 +40,8 @@ Run `./get_islandora_content --help` to get help usage information:
 An example of running the script is:
 
 `./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing`
+`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing -d PDF`
+`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing -m image/jpeg`
 
 The output will contain a `metadata.xml` file and and file corresponding to each retrieved objects' OBJ datastream. For example, a small collection of images results in the following output:
 
@@ -104,8 +106,6 @@ The `metadata.xml` file contains all of the MODS datastreams retrieved from the 
 
 * Confirm that the filenames are suitable for use by Migrate Plus
 * More, better error handling
-* Ability to limit harvest to objects whose OBJs are of specific MIME types
-* Ability to specify datastreams other than OBJ, per content model
 
 ## Contributing
 

@@ -1,23 +1,28 @@
 #!/usr/bin/env php
 <?php
 
-/**
- * You only need to change these three variables.
- */
-$output_directory = '/tmp/test';
-$host = 'http://digital.lib.sfu.ca';
-$set = 'hbc_collection';
+require 'vendor/autoload.php';
+$cmd = new Commando\Command();
+use GuzzleHttp\Client;
 
-/**
- * You do not need to change anything below this line.
- */
+$cmd->option('h')
+    ->aka('host')
+    ->describedAs('The Islandora server\'s hostname, including the "http(s)://". The trailing "/" is optional.');
+$cmd->option('c')
+    ->aka('collection')
+    ->describedAs('A collection PID to harvest.');
+$cmd->option('o')
+    ->aka('output_directory')
+    ->describedAs('The full path to the output directory.');
+
+$output_directory = $cmd['output_directory'];
+$host = rtrim($cmd['host'], '/');
+$set = preg_replace('/:/', '_', $cmd['collection']);
+
 $oai_url = $host . '/oai2';
 $metadata_prefix = 'mods';
 $metadata_filename = 'metadata.xml';
 $metadata_path = $output_directory . DIRECTORY_SEPARATOR . $metadata_filename;
-
-require 'vendor/autoload.php';
-use GuzzleHttp\Client;
 
 $client = new \Phpoaipmh\Client($oai_url);
 $endpoint = new \Phpoaipmh\Endpoint($client);

@@ -18,19 +18,28 @@ Command-line tool to harvest Islandora objects through OAI-PMH. More of a proof 
 
 ## Overview and usage
 
-To use this script, edit the following three variables:
+Run `./get_islandora_content` to get help usage information:
 
 ```
-$output_directory = '/tmp/hbc_output';
-$host = 'http://digital.lib.sfu.ca';
-$set = 'hbc_collection';
+-c/--collection <argument>
+     A collection PID to harvest.
+
+
+-h/--host <argument>
+     The Islandora server's hostname, including the "http(s)://". The trailing "/" is optional.
+
+
+--help
+     Show the help page for this command.
+
+
+-o/--output_directory <argument>
+     The full path to the output directory.
 ```
 
-The value of `$set` is a collection PID with its colon replaced by an underscore (e.g., `hbc:collection` becomes `hbc_collection`).
+An example of running the script is:
 
-Then run the script:
-
-`./get_islandora_content`
+`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing`
 
 The output will contain a `metadata.xml` file and and file corresponding to each retrieved objects' OBJ datastream. For example, a small collection of images results in the following output:
 
@@ -91,12 +100,10 @@ The `metadata.xml` file contains all of the MODS datastreams retrieved from the 
 </modsCollection>
 ```
 
-
 ## To do
 
 * Confirm that the filenames are suitable for use by Migrate Plus
 * More, better error handling
-* Ability to harvest multiple collections at one time`
 * Ability to limit harvest to objects whose OBJs are of specific MIME types
 * Ability to specify datastreams other than OBJ, per content model
 

@@ -5,6 +5,7 @@
     "require": {
         "php": ">=5.5.0",
         "monolog/monolog": "~1.13",
+        "nategood/commando": "*",
         "caseyamcl/phpoaipmh": "~2.0",
         "guzzlehttp/guzzle": "~6.0"
     }

@@ -108,7 +108,7 @@ The `metadata.xml` file contains all of the MODS datastreams retrieved from the 
 
 Using the REST option, the `metadata.xml` file contains just the MODS content, and not any OAI-PMH content:
 
-```
+```xml
 <modsCollection>
 <mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink">
   <titleInfo>

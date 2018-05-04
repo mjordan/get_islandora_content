@@ -21,50 +21,109 @@ $cmd->option('d')
     ->aka('dsid')
     ->describedAs('Datastream ID to harvest. Default is "OBJ".')
     ->default('OBJ');
+$cmd->option('s')
+    ->aka('source')
+    ->require()
+    ->describedAs('Either "oai" or "rest".');
 
 $output_directory = $cmd['output_directory'];
 $host = rtrim($cmd['host'], '/');
-$set = preg_replace('/:/', '_', $cmd['collection']);
 $dsid = $cmd['dsid'];
 
-$oai_url = $host . '/oai2';
-$metadata_prefix = 'mods';
-$metadata_filename = 'metadata.xml';
-$metadata_path = $output_directory . DIRECTORY_SEPARATOR . $metadata_filename;
+if ($cmd['source'] == 'oai') {
+    $set = preg_replace('/:/', '_', $cmd['collection']);
+    $oai_url = $host . '/oai2';
+    $metadata_prefix = 'mods';
+    $metadata_filename = 'metadata.xml';
+    $metadata_path = $output_directory . DIRECTORY_SEPARATOR . $metadata_filename;
 
-$client = new \Phpoaipmh\Client($oai_url);
-$endpoint = new \Phpoaipmh\Endpoint($client);
+    $client = new \Phpoaipmh\Client($oai_url);
+    $endpoint = new \Phpoaipmh\Endpoint($client);
 
-if (!file_exists($output_directory)) {
-    mkdir($output_directory);
-}
+    if (!file_exists($output_directory)) {
+        mkdir($output_directory);
+    }
 
-$recs = $endpoint->listRecords($metadata_prefix, null, null, $set);
-$rec_num = 0;
-file_put_contents($metadata_path, '<modsCollection>' . "\n", FILE_APPEND);
-foreach($recs as $rec) {
-    $pid = get_pid($rec->asXML());
-    list($mimetype, $response_code) = ping_datastream($host, $pid, $dsid);
-    if ($cmd['mimetype'] && $response_code == 200) {
-        if ($remote_obj_mimetype == $cmd['mimetype']) {
-            $rec_num++;
-            print "Retrieving content for object " . $pid . "\n";
-            file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
-            get_obj($host, $pid, $output_directory);
-        }
-    } else {
-        if ($response_code == 200) {
-            $rec_num++;
-            print "Retrieving content for object " . $pid . "\n";
-            file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
-            get_obj($host, $pid, $dsid, $output_directory);
+    $recs = $endpoint->listRecords($metadata_prefix, null, null, $set);
+    $rec_num = 0;
+    file_put_contents($metadata_path, '<modsCollection>' . "\n", FILE_APPEND);
+    foreach($recs as $rec) {
+        $pid = get_pid($rec->asXML());
+        list($mimetype, $response_code) = ping_datastream($host, $pid, $dsid);
+        if ($cmd['mimetype'] && $response_code == 200) {
+            if ($remote_obj_mimetype == $cmd['mimetype']) {
+                $rec_num++;
+                print "Retrieving content for object " . $pid . "\n";
+                file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
+                get_obj($host, $pid, $output_directory);
+            }
         } else {
-            print "$dsid datastream not found for object $pid\n";
+            if ($response_code == 200) {
+                $rec_num++;
+                print "Retrieving content for object " . $pid . "\n";
+                file_put_contents($metadata_path, $rec->asXML(), FILE_APPEND);
+                get_obj($host, $pid, $dsid, $output_directory);
+            } else {
+                print "$dsid datastream not found for object $pid\n";
+            }
         }
     }
+    file_put_contents($metadata_path, "\n" . '</modsCollection>', FILE_APPEND);
+    print "$rec_num objects retrieved and saved in $output_directory.\n";
 }
-file_put_contents($metadata_path, "\n" . '</modsCollection>', FILE_APPEND);
-print "$rec_num objects retrieved and saved in $output_directory.\n";
+
+if ($cmd['source'] == 'rest') {
+    $metadata_prefix = 'mods';
+    $metadata_filename = 'metadata.xml';
+    $metadata_path = $output_directory . DIRECTORY_SEPARATOR . $metadata_filename;
+
+    if (!file_exists($output_directory)) {
+        mkdir($output_directory);
+    }
+
+    $collection_pid = preg_replace('/:/', '\:', $cmd['collection']);
+    $query = 'RELS_EXT_isMemberOfCollection_uri_mt:"' . $collection_pid . '"?fl=PID&rows=1000000';
+
+    $client = new Client();
+    $site_rest_url = $host . '/islandora/rest/v1/';
+    $response = $client->get($site_rest_url . 'solr/' . $query);
+    if ($response->getStatusCode() == 200) {
+        $response_body = (string) $response->getBody();
+        $response_body = json_decode($response_body);
+        $num_found = $response_body->response->numFound;
+        $docs = $response_body->response->docs;
+    }
+
+    $rec_num = 0;
+    file_put_contents($metadata_path, '<modsCollection>' . "\n", FILE_APPEND);
+    foreach($docs as $doc) {
+        $pid = $doc->PID;
+        list($mimetype, $response_code) = ping_datastream($host, $pid, $dsid);
+        if ($cmd['mimetype'] && $response_code == 200) {
+            if ($remote_obj_mimetype == $cmd['mimetype']) {
+                $rec_num++;
+                print "Retrieving content for object " . $pid . "\n";
+                $mods_xml = get_mods($host, $pid);
+                file_put_contents($metadata_path, $mods_xml, FILE_APPEND);
+                get_obj($host, $pid, $output_directory);
+            }
+        } else {
+            if ($response_code == 200) {
+                $rec_num++;
+                print "Retrieving content for object " . $pid . "\n";
+                $mods_xml = get_mods($host, $pid);
+                file_put_contents($metadata_path, $mods_xml, FILE_APPEND);
+                get_obj($host, $pid, $dsid, $output_directory);
+            } else {
+                print "$dsid datastream not found for object $pid\n";
+            }
+        }
+    }
+
+    file_put_contents($metadata_path, "\n" . '</modsCollection>', FILE_APPEND);
+    print "$num_found objects retrieved and saved in $output_directory.\n";
+}
+
 
 function get_pid($xml) {
     $dom = new \DOMDocument;
@@ -94,6 +153,20 @@ function get_obj($host, $pid, $dsid, $output_directory) {
     while (!$body->eof()) {
         file_put_contents($content_file_path, $body->read(2048), FILE_APPEND);
     }
+}
+
+function get_mods($host, $pid) {
+    $obj_url = $host . '/islandora/object/' . $pid . '/datastream/MODS/download';
+    $client = new Client();
+    $response = $client->get($obj_url, ['http_errors' => false, 'verify' => true]);
+
+    $body = $response->getBody();
+    $body = (string) $body;
+    // Remove the XML declaration.
+    $dom = new DOMDocument();
+    $dom->loadXML($body);
+    $body = $dom->saveXML($dom->documentElement);
+    return $body;
 }
 
 function ping_datastream($host, $pid, $dsid) {

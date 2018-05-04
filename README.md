@@ -1,11 +1,12 @@
 # Get Islandora Content
 
-Command-line tool to harvest Islandora objects through OAI-PMH and save them to disk ready to ingest into Drupal 8 using Migrate Plus. More of a proof of concept than anything else, but works as advertised. For background, see https://github.com/Islandora-CLAW/CLAW/issues/452.
+Command-line tool to harvest Islandora objects through OAI-PMH or REST and save them to disk ready to ingest into Drupal 8 using Migrate Plus. More of a proof of concept than anything else, but works as advertised. For background, see https://github.com/Islandora-CLAW/CLAW/issues/452.
 
 ## Requirements
 
 * On the target Islandora instance
-  * [Islandora OAI](https://github.com/Islandora/islandora_oai)
+  * [Islandora OAI](https://github.com/Islandora/islandora_oai) or
+  * [Islandora REST](https://github.com/discoverygarden/islandora_rest)
 * On the system where the script is run
   * PHP 5.5.0 or higher.
   * [Composer](https://getcomposer.org)
@@ -35,12 +36,15 @@ Run `./get_islandora_content --help` to get help usage information:
 
 -o/--output_directory <argument>
      The full path to the output directory.
+
+-s/--source <argument>
+     Required. Either "oai" or "rest".
 ```
 
 Examples of running the script include:
 
-`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing`
-`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing -d PDF`
+`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing --s oai`
+`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing --s rest -d PDF`
 `./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing -m image/jpeg`
 
 The output will contain a `metadata.xml` file and and file corresponding to each retrieved objects' OBJ datastream. For example, a small collection of images results in the following output:
@@ -97,6 +101,37 @@ The `metadata.xml` file contains all of the MODS datastreams retrieved from the 
   <identifier type="uri" invalid="yes" displayLabel="Migrated From">http://content.lib.sfu.ca/cdm/ref/collection/hbc/id/1</identifier>
 </mods></metadata></record>
 
+<!-- more MODS records here -->
+
+</modsCollection>
+```
+
+Using the REST option, the `metadata.xml` file contains just the MODS content, and not any OAI-PMH content:
+
+```
+<modsCollection>
+<mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <titleInfo>
+    <title>A view of a rope bridge, (2) showing traffic</title>
+  </titleInfo>
+  <name>
+    <namePart>Harrison Brown</namePart>
+    <role>
+      <roleTerm type="code" authority="marcrelator">pht</roleTerm>
+      <roleTerm type="text" authority="marcrelator">Photographer</roleTerm>
+    </role>
+  </name>
+  <originInfo>
+    <dateIssued encoding="w3cdtf" keyDate="yes">1936-11-12</dateIssued>
+  </originInfo>
+  <abstract>Kwan Hsian</abstract>
+  <genre authority="lcsh">photographs</genre>
+  <accessCondition type="use and reproduction">Reproduction of the material is subject to the approval of the Special Collections and Rare Books Librarian</accessCondition>
+  <identifier type="local"/>
+  <typeOfResource>still image</typeOfResource>
+  <identifier type="uuid">f7bc0c20-9bc6-4499-b1f3-7fda4eafeaf0</identifier>
+  <identifier type="uri" invalid="yes" displayLabel="Migrated From">http://content.lib.sfu.ca/cdm/ref/collection/hbc/id/1</identifier>
+</mods>
 <!-- more MODS records here -->
 
 </modsCollection>

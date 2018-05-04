@@ -43,9 +43,9 @@ Run `./get_islandora_content --help` to get help usage information:
 
 Examples of running the script include:
 
-`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing --s oai`
-`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing --s rest -d PDF`
-`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing -m image/jpeg`
+`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing -s oai`
+`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing -s rest -d PDF`
+`./get_islandora_content -h http://digital.lib.sfu.ca -c hbc:collection -o /tmp/testing -s oai -m image/jpeg`
 
 The output will contain a `metadata.xml` file and and file corresponding to each retrieved objects' OBJ datastream. For example, a small collection of images results in the following output:
 
